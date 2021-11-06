@@ -6,7 +6,11 @@ def get_data():
     process = CrawlerProcess(get_project_settings())
 
     # 'followall' is the name of one of the spiders of the project.
-    process.crawl('funda')
+    search_criteria = ['rotterdam',     #city
+                       '250000-350000', #price range
+                       'woonhuis'       #type
+                       ]
+    process.crawl('funda', search_criteria=search_criteria)
     process.start()  # the script will block here until the crawling is finished
 
 

@@ -6,18 +6,21 @@ from bs4 import BeautifulSoup
 
 class FundaSpider(scrapy.Spider):
     name = "funda"
-    city = "rotterdam"
     allowed_domains = ['funda.nl']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, search_criteria, *args, **kwargs):
         super().__init__(*args, **kwargs)
         configure_logging({'LOG_LEVEL': logging.INFO})
+
+        self.search_criteria = search_criteria
 
 
 
     def start_requests(self):
+        url = ['http://funda.nl/en/koop/']
+        criteria = '/'.join(self.search_criteria)
         urls = [
-            f'http://funda.nl/en/koop/{self.city}/250000-350000/woonhuis/+30km/p1/'
+            f'http://funda.nl/en/koop/{criteria}/p1/'
         ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
@@ -81,5 +84,6 @@ class FundaSpider(scrapy.Spider):
                             floor_area=floor_area,
                             property_area=property_area,
                             rooms=rooms,
-                            id=id))
+                            id=id,
+                            search_area=self.search_criteria[0]))
         return items
