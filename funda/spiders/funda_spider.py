@@ -1,39 +1,40 @@
-import csv
 import scrapy
 import logging
+from scrapy.utils.log import configure_logging
+from funda.items import FundaItem
 from bs4 import BeautifulSoup
 
-class CitySpider(scrapy.Spider):
-    name = "city"
+class FundaSpider(scrapy.Spider):
+    name = "funda"
+    city = "rotterdam"
     allowed_domains = ['funda.nl']
-    custom_settings = {
-        'LOG_LEVEL': logging.INFO
-    }
 
-    def __init__(self):
-        super().__init__(self)
-        self.items = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        configure_logging({'LOG_LEVEL': logging.INFO})
+
+
 
     def start_requests(self):
         urls = [
-            'http://funda.nl/en/koop/rotterdam/250000-350000/woonhuis/+30km/p1/'
+            f'http://funda.nl/en/koop/{self.city}/250000-350000/woonhuis/+30km/p1/'
         ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        self.get_items(response.body)
-        page = int(response.url.split("/")[-2][1:])
+        items = self.get_items(response.body)
+        for item in items:
+            yield item
 
         # Finding next button and opening the page
         next = self.find_next(response.body)
+        next_url = f'http://{self.allowed_domains[0]}/{next}'
 
-        if next and page < 250: # max 250 pages
-            yield scrapy.Request(f'http://{self.allowed_domains[0]}/{next}',\
-                callback=self.parse)
-        else:
-            #self.logger.info("Completed parsing, saving to file")
-            self.save_csv()
+        # Find link to the next page and yield the request
+        page = int(response.url.split("/")[-2][1:])
+        if next and page < 5: # max 5 pages
+            yield response.follow(next_url, callback=self.parse)
 
 
     def find_next(self, body):
@@ -41,16 +42,9 @@ class CitySpider(scrapy.Spider):
         next = soup.find('a', attrs={'rel':'next'})
         return next.get('href') if next else None
 
-    def save_csv(self):
-        filename = 'data/rotterdam.csv'
-        with open(filename, 'w+') as file:
-            writer = csv.DictWriter(file, self.items[0].keys())
-            writer.writeheader()
-            writer.writerows(self.items)
-
-
     def get_items(self, body):
         soup = BeautifulSoup(body, 'html.parser')
+        items = []
 
         listing = soup.find_all('div', class_='search-result-content-inner')
         for item in listing:
@@ -82,10 +76,11 @@ class CitySpider(scrapy.Spider):
             rooms = rooms_tag.string.strip() if rooms_tag else ''
             id = id_tag.get('data-search-result-item-anchor') if id_tag else ''
 
-            self.items.append({'address': address,
-                          'price': price,
-                          'floor_area': floor_area,
-                          'property_area': property_area,
-                          'rooms': rooms,
-                          'id': id})
-        return
+            items.append(FundaItem(address=address,
+                            price=price,
+                            floor_area=floor_area,
+                            property_area=property_area,
+                            rooms=rooms,
+                            id=id,
+                            city=self.city))
+        return items
