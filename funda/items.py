@@ -16,5 +16,3 @@ class FundaItem(scrapy.Item):
     property_area = scrapy.Field()
     rooms = scrapy.Field()
     id = scrapy.Field()
-    city = scrapy.Field()
-    pass

@@ -81,6 +81,5 @@ class FundaSpider(scrapy.Spider):
                             floor_area=floor_area,
                             property_area=property_area,
                             rooms=rooms,
-                            id=id,
-                            city=self.city))
+                            id=id))
         return items
