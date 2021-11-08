@@ -8,11 +8,12 @@ class FundaSpider(scrapy.Spider):
     name = "funda"
     allowed_domains = ['funda.nl']
 
-    def __init__(self, search_criteria, *args, **kwargs):
+    def __init__(self, search_criteria, limit=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         configure_logging({'LOG_LEVEL': logging.INFO})
 
         self.search_criteria = search_criteria
+        self.limit = limit
 
 
 
@@ -36,7 +37,7 @@ class FundaSpider(scrapy.Spider):
 
         # Find link to the next page and yield the request
         page = int(response.url.split("/")[-2][1:])
-        if next and page < 5: # max 5 pages
+        if next and (self.limit is None or page<self.limit):
             yield response.follow(next_url, callback=self.parse)
 
 

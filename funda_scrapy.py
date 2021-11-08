@@ -8,7 +8,8 @@ def get_data():
     # 'followall' is the name of one of the spiders of the project.
     search_criteria = ['rotterdam',     #city
                        '250000-350000', #price range
-                       'woonhuis'       #type
+                       'woonhuis',      #type
+                       '+30km'          #distance
                        ]
     process.crawl('funda', search_criteria=search_criteria)
     process.start()  # the script will block here until the crawling is finished
