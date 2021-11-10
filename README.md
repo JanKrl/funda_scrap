@@ -16,4 +16,5 @@ Written in Python using [Scrapy](https://scrapy.org/) library
 **SaveToFilePipeline** exports data to CSV file
 
 ## Price map
+Displays properties map color-labeled by price per square meter
 ![map](Price-per-sqm-map.PNG)
