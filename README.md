@@ -14,3 +14,6 @@ Written in Python using [Scrapy](https://scrapy.org/) library
 
 ## SaveToFilePipeline
 **SaveToFilePipeline** exports data to CSV file
+
+## Price map
+![map](Price-per-sqm-map.PNG)
