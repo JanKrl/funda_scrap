@@ -11,9 +11,14 @@ Written in Python using [Scrapy](https://scrapy.org/) library
 - number of rooms
 - id
 - city
+- latitude
+- longtitude
 
 ## SaveToFilePipeline
 **SaveToFilePipeline** exports data to CSV file
+- Doesn't save items that already exist in the database.
+- Cleans up item's *address* postal code formatting
+- Reads georgaphical position from web API
 
 ## Price map
 Displays properties map color-labeled by price per square meter
