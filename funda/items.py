@@ -17,3 +17,5 @@ class FundaItem(scrapy.Item):
     rooms = scrapy.Field()
     id = scrapy.Field()
     search_area = scrapy.Field()
+    lat = scrapy.Field()
+    lon = scrapy.Field()
