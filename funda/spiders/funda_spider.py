@@ -12,6 +12,7 @@ class FundaSpider(scrapy.Spider):
         super().__init__(*args, **kwargs)
         configure_logging({'LOG_LEVEL': logging.INFO})
 
+        self.search_area = search_criteria[0]
         self.search_criteria = search_criteria
         self.limit = limit
 
@@ -86,5 +87,5 @@ class FundaSpider(scrapy.Spider):
                             property_area=property_area,
                             rooms=rooms,
                             id=id,
-                            search_area=self.search_criteria[0]))
+                            search_area=self.search_area))
         return items
