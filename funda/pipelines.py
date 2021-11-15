@@ -27,7 +27,7 @@ class SaveToFilePipeline:
         items_removed = 0
         for area, records in self.previous_records.items():
             if len(records) > 0:
-                with open(f'data/{area}-{date.today()}_removed.csv', 'wb+') as csvfile:
+                with open(f'data/{area}-{date.today()}_removed.csv', 'w+') as csvfile:
                     writer = csv.writer(csvfile)
                     for item_id in records:
                         writer.writerow(item_id)
