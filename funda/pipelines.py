@@ -9,6 +9,7 @@ import logging
 from funda.utils import clean
 from datetime import date
 from scrapy.exporters import CsvItemExporter
+from scrapy.exceptions import CloseSpider
 
 class SaveToFilePipeline:
     def open_spider(self, spider):
@@ -16,7 +17,6 @@ class SaveToFilePipeline:
         self.items_processed = 0
         self.items_already_exist = 0
         self.previous_records = {}
-        self.previous_records[spider.search_area] = []
 
 
     def close_spider(self, spider):
@@ -25,12 +25,12 @@ class SaveToFilePipeline:
 
         # Check for previous records not found this time
         items_removed = 0
-        for area, records in self.previous_records.items():
-            if len(records) > 0:
-                with open(f'data/{area}-{date.today()}_removed.csv', 'w+') as csvfile:
-                    writer = csv.writer(csvfile)
-                    for item_id in records:
-                        writer.writerow(item_id)
+        with open(f'data/{spider.search_area}-{date.today()}_removed.csv', 'w+') as csvfile:
+            writer = csv.writer(csvfile)
+            for key, value in self.previous_records.items():
+                if value:
+                    items_removed += 1
+                    writer.writerow([key])
         logging.log(logging.INFO, f'Items removed {items_removed}')
 
         # Close all opened exporters
@@ -60,8 +60,12 @@ class SaveToFilePipeline:
 
     def process_item(self, item, spider):
         self.items_processed += 1
-        if item['id'] not in self.previous_records[spider.search_area]:
-            # Clean data
+        id = int(item['id'])
+        if self.previous_records.get(id, False):
+            self.items_already_exist += 1
+            self.previous_records[id] = False
+        else:
+            # Clean data and export
             item['floor_area'] = clean.area(item['floor_area'])
             item['property_area'] = clean.area(item['property_area'])
             item['price'] = clean.price(item['price'])
@@ -71,9 +75,9 @@ class SaveToFilePipeline:
 
             exporter = self._area_exporter(spider.search_area)
             exporter.export_item(item)
-        else:
-            self.items_already_exist += 1
-            self.previous_records[spider.search_area].pop(item['id'])
+
+        if self.previous_records.get(id, False):
+            raise CloseSpider('Item not removed')
 
         logging.log(logging.DEBUG, f'Items processed {self.items_processed}')
         return item
@@ -89,14 +93,14 @@ class SaveToFilePipeline:
                     and file.name.split('.')[-1] == 'csv'\
                     and '_removed' not in file.name\
                     and search_area in file.name:
-                    self._load_previous_data(file.path, search_area)
+                    self._load_previous_data(file.path)
 
 
-    def _load_previous_data(self, file_path, search_area):
+    def _load_previous_data(self, file_path):
         with open(file_path) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                self.previous_records[search_area].append(row)
+                self.previous_records[int(row['id'])] = True
 
 
     def _get_coordinates(self, address):
